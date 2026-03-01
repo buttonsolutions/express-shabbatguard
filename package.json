@@ -19,6 +19,8 @@
   },
   "dependencies": {
     "@hebcal/core": "^6.0.8",
+    "interval-tree-1d": "^1.0.4",
+    "interval-tree2": "^1.1.0",
     "node-interval-tree": "^2.1.2"
   }
 }
