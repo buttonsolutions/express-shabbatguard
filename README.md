@@ -1,7 +1,7 @@
 To install
 ----
 
-npm install express-shabbatguard
+npm install [express-shabbatguard](https://www.npmjs.com/package/express-shabbatguard)
 
 Usage example
 ---
