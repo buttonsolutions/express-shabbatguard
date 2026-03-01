@@ -1,0 +1,24 @@
+{
+  "name": "express-shabbatguard",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/buttonsolutions/express-shabbatguard#readme",
+  "bugs": {
+    "url": "https://github.com/buttonsolutions/express-shabbatguard/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/buttonsolutions/express-shabbatguard.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@hebcal/core": "^6.0.8",
+    "node-interval-tree": "^2.1.2"
+  }
+}
