@@ -10,17 +10,15 @@
     "type": "git",
     "url": "git+https://github.com/buttonsolutions/express-shabbatguard.git"
   },
-  "license": "ISC",
-  "author": "",
+  "license": "MIT",
+  "author": "Nathan Pankowsky",
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --test test/test.cjs "
   },
   "dependencies": {
     "@hebcal/core": "^6.0.8",
-    "interval-tree-1d": "^1.0.4",
-    "interval-tree2": "^1.1.0",
-    "node-interval-tree": "^2.1.2"
+    "interval-tree-1d": "^1.0.4"
   }
 }
