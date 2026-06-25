@@ -118,7 +118,6 @@ export function initTree(locations) {
     locations = locations || [];
 
     locations.push(supportedLocations.Jerusalem);
-    locations.push(supportedLocations.San_Francisco);
 
     for (const location of new Set(locations)) {
         const currentLocation = Location.lookup(location);
