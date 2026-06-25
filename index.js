@@ -97,6 +97,10 @@ class TimeIntervalTree {
     }
 
     search(time) {
+        if (!this.tree) {
+            return []; // safely fail
+        }
+
         let convertedTime = time.getTime();
         let values = [];
         this.tree.queryPoint(convertedTime, function (interval) {
@@ -180,8 +184,8 @@ export async function initTree(locations) {
     timeTree.build();
 }
 
-export async function shabbatGuard(locations) {
-    await initTree(locations);
+export function shabbatGuard(locations) {
+    initTree(locations); // should not take long
     console.log('|shabbatGuard| enabled');
     return (function (req, res, next) {
         const currentDate = new Date();
