@@ -1,4 +1,4 @@
-import { CandleLightingEvent, HavdalahEvent, HebrewCalendar, Location } from '@hebcal/core';
+import { CandleLightingEvent, HavdalahEvent, HDate, HebrewCalendar, Location } from '@hebcal/core';
 import createIntervalTree from "interval-tree-1d";
 
 // supported locations: https://github.com/hebcal/hebcal-es6/blob/main/src/location.ts
@@ -70,6 +70,11 @@ export const supportedLocations = {
     Worcester: 'Worcester',
 };
 
+const manualLookupGeo = {
+    Jerusalem: 281184,
+    'Tel Aviv': 293397,
+}
+
 class CandleLighting {
     constructor() {
         this.lighting = null;
@@ -114,38 +119,60 @@ export function isHebrewDateForbidden(date) {
     return false;
 }
 
-export function initTree(locations) {
+/**
+ * Adds time to a date. Modelled after MySQL DATE_ADD function.
+ * Example: dateAdd(new Date(), 'minute', 30)  //returns 30 minutes from now.
+ * https://stackoverflow.com/a/1214753/18511
+ * 
+ * @param date  Date to start with
+ * @param interval  One of: year, quarter, month, week, day, hour, minute, second
+ * @param units  Number of units of the given interval to add.
+ */
+function dateAdd(date, interval, units) {
+    if (!(date instanceof Date))
+        return undefined;
+    var ret = new Date(date); //don't change original date
+    var checkRollover = function () { if (ret.getDate() != date.getDate()) ret.setDate(0); };
+    switch (String(interval).toLowerCase()) {
+        case 'year': ret.setFullYear(ret.getFullYear() + units); checkRollover(); break;
+        case 'quarter': ret.setMonth(ret.getMonth() + 3 * units); checkRollover(); break;
+        case 'month': ret.setMonth(ret.getMonth() + units); checkRollover(); break;
+        case 'week': ret.setDate(ret.getDate() + 7 * units); break;
+        case 'day': ret.setDate(ret.getDate() + units); break;
+        case 'hour': ret.setTime(ret.getTime() + units * 3600000); break;
+        case 'minute': ret.setTime(ret.getTime() + units * 60000); break;
+        case 'second': ret.setTime(ret.getTime() + units * 1000); break;
+        default: ret = undefined; break;
+    }
+    return ret;
+}
+
+export async function initTree(locations) {
     locations = locations || [];
 
     locations.push(supportedLocations.Jerusalem);
+    locations.push(supportedLocations.Tel_Aviv);
 
     for (const location of new Set(locations)) {
-        const currentLocation = Location.lookup(location);
-        if (!currentLocation) {
-            console.error(`your location is not supported! ${location}`);
+        const geonameId = manualLookupGeo[location];
+        if (!geonameId) {
             continue;
         }
-        const startTime = new Date();
-        const events = HebrewCalendar.calendar({
-            year: startTime.getFullYear(),
-            isHebrewYear: false,
-            candlelighting: true,
-            location: currentLocation,
-            sedrot: true,
-            omer: true,
-        });
+
+        const url = `https://www.hebcal.com/hebcal?v=1&cfg=json&maj=on&min=on&mod=on&nx=on&year=now&month=x&ss=on&mf=on&c=on&geo=geoname&geonameid=${geonameId}&M=on&s=on`;
+        const result = await fetch(url).then(resp => resp.json());
 
         let lastCandleLighting = new CandleLighting();
-
-        for (const ev of events) {
-            const gregDate = new Date(new Date(ev.eventTime).toUTCString());
-            if (ev instanceof CandleLightingEvent) {
-                lastCandleLighting.lighting = gregDate;
-            } else if (ev instanceof HavdalahEvent) {
-                lastCandleLighting.havdalah = gregDate;
+        for (const item of result.items) {
+            let gregDate = new Date(item.date);
+            if (item.category == "havdalah") {
+                // we need to add 10 minutes or so to this for safety
+                lastCandleLighting.havdalah = dateAdd(gregDate, 'minute', 10);
                 console.log(`adding: ${JSON.stringify(lastCandleLighting)}`);
                 timeTree.add(lastCandleLighting);
                 lastCandleLighting = new CandleLighting();
+            } else if (item.category == "candles") {
+                lastCandleLighting.lighting = gregDate;
             }
         }
     }
@@ -153,8 +180,8 @@ export function initTree(locations) {
     timeTree.build();
 }
 
-export function shabbatGuard(locations) {
-    initTree(locations);
+export async function shabbatGuard(locations) {
+    await initTree(locations);
     console.log('|shabbatGuard| enabled');
     return (function (req, res, next) {
         const currentDate = new Date();
